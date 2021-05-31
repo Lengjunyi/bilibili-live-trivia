@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+
+<head> 
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <meta charset="utf-8">
+    <title>一起来背单词吧</title>
+    <meta name="generator" content="Google Web Designer 11.0.2.0415">
+    <style type="text/css" id="gwd-text-style">
+        p {
+            margin: 0px;
+        }
+
+        h1 {
+            margin: 0px;
+        }
+
+        h2 {
+            margin: 0px;
+        }
+
+        h3 {
+            margin: 0px;
+        }
+    </style>
+    <style type="text/css">
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+        }
+
+        p {
+            white-space: pre-wrap;
+        }
+
+        body {
+            background-color: transparent;
+            transform: perspective(1400px) matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            transform-style: preserve-3d;
+        }
+
+        .gwd-label-1ry2 {
+            position: absolute;
+            background-image: none;
+            background-color: rgb(255, 255, 255);
+            font-family: Verdana;
+            font-size: 50px;
+            width: 400px;
+            text-align: center;
+            height: 70px;
+            top: 80px;
+            left: 107px;
+        }
+
+        .gwd-label-acby {
+            position: absolute;
+            width: 100px;
+            height: 20px;
+            top: 220px;
+            font-family: Verdana;
+            left: 69px;
+        }
+
+        .gwd-label-1svh {
+            position: absolute;
+            width: 100px;
+            height: 20px;
+            font-family: Verdana;
+            text-align: center;
+            left: 638px;
+            font-size: 18px;
+            top: 35px;
+        }
+
+        .gwd-label-1uuv {
+            position: absolute;
+            font-family: Verdana;
+            height: 300px;
+            top: 80px;
+            width: 150px;
+            left: 613px;
+            text-align: center;
+        }
+
+        .gwd-h2-1r75 {
+            width: 184px;
+            height: 104px;
+        }
+
+        .gwd-h2-1h9b {
+            left: 341px;
+            top: 196px;
+        }
+
+        .gwd-h2-mpwd {
+            top: 196px;
+        }
+
+        .gwd-h1-1i31 {
+            font-size: 21px;
+            left: 53px;
+            top: 346px;
+            width: 216px;
+        }
+
+        .gwd-h1-1ndl {
+            left: 333px;
+            font-size: 18px;
+        }
+
+        #label_6 {
+            width: 250px;
+            font-size: 18px;
+        }
+        #label_5 {
+            width: 250px;
+            font-size: 16px;
+        }
+    </style>
+    <link
+        href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,regular,italic,600,600italic,700,700italic,800,800italic"
+        rel="stylesheet" type="text/css">
+</head>
+
+<body class="htmlNoPages">
+    <div id="container">
+        <h1 id="label_1" class="gwd-label-1ry2">{{currentWordRevealed}}</h1>
+        <h1 id="label_7" class="gwd-label-1ry2 gwd-h1-1i31">
+            本场 <br>
+            {{currentWordList}}
+        </h1>
+        <h1 id="label_8" class="gwd-label-1ry2 gwd-h1-1i31 gwd-h1-1ndl"><p>{{songs}}</p></h1>
+        <h2 id="label_2" class="gwd-label-acby gwd-h2-1r75 gwd-h2-mpwd">
+            <p>中文释义:</p>
+            <p>{{definition}}</p>
+        </h2>
+        <h2 id="label_6" class="gwd-label-acby gwd-h2-1r75 gwd-h2-1h9b">
+            <p>英文释义:</p>
+            <p>{{englishDefinition}}</p>
+        </h2>
+        <label id="label_4" class="gwd-label-1svh">今日排行榜</label>
+        <label id="label_5" class="gwd-label-1uuv">
+            <ol>
+                <li v-for="user in ranking">
+                    {{ user.name + "  "}} {{ user.score}}
+                </li>
+            </ol>
+        </label>
+    </div>
+    <script>
+        var app = new Vue({
+            el: '#container',
+            data: {
+                index: 0,
+                currentWord: 'NeverGonna',
+                definition: '永远不会',
+                englishDefinition: 'vt. (be) not expecting to do sth. in a long time period',
+
+                currentWordList: [],
+
+                songs: 'Hello Vue!',
+
+                // scores of all users
+                // username : score
+                scores: {},
+
+                ranking: [],
+
+                bullets: {},
+
+                help: "在弹幕中，直接输入单词参与答题，\"点歌 歌曲名\"点选歌曲，\"投票 投票选项\"参与每日投票"
+            },
+            computed: {
+                currentWordRevealed: function () {
+                    var word = this.currentWord
+                    var totalLetters = word.length
+                    var obscuredLetters = Math.floor(totalLetters * 0.42)
+
+                    var result = ""
+                    var remainingLetters = totalLetters
+                    for (var i = 0; i < totalLetters; i++) {
+                        if (Math.random() < obscuredLetters / remainingLetters) {
+                            result += "_"
+                            obscuredLetters -= 1
+                        } else {
+                            result += word[i]
+                        }
+                        remainingLetters -= 1
+                    }
+                    return result
+                },
+            },
+        })
+    </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        socket.on("songs-info", (str) => {
+            app.songs = str;
+        })
+
+        function update_ranking() {
+            console.log("scores changed")
+            var list = [];
+            for (var user in app.scores) {
+                list.push({ name: user, score: app.scores[user] })
+            }
+            list.sort(function (a, b) { return b.score - a.score })
+            if (list.length > 10) {
+                list = list.slice(0, 10)
+            }
+            app.ranking = list
+        }
+        socket.on("bullet", (username, word) => {
+            console.log("收到弹幕 " + username + " " + word)
+            if (word == app.currentWord) {
+                if (app.currentWordList.length == 0) {
+                    console.log('word answered')
+                    setTimeout(function () {
+                        socket.emit('new word');
+                    }, 10000);
+                }
+                if (!(username in app.currentWordList)) {
+                    var score = 0;
+                    app.currentWordList.push(username);
+                    if (username in app.scores) {
+                        score = app.scores[username];
+                    }
+                    console.log(username + " new score is : " + (score + 1))
+                    Vue.set(app.scores, username, score + 1)
+                    update_ranking()
+                }
+            }
+        })
+
+        socket.on("new word", (word, meaning, english_meaning) => {
+            app.currentWord = word;
+            app.definition = meaning;
+            app.englishDefinition = english_meaning;
+            app.currentWordList = [];
+        })
+    </script>
+</body>
+
+</html>
